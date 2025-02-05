@@ -1,13 +1,15 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit,ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ProjectsApiService } from '../services/projects-api/projects-api.service';
 import { ProfileService } from '../services/profile/profile.service';
 import { ToastService } from '../services/toast/toast.service';
 import { LoaderService } from '../services/loader/loader.service';
-import { MenuController } from '@ionic/angular';
+import { IonContent, MenuController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { GwApiService } from '../services/gw-api/gw-api.service';
 import { VoiceInputService } from '../services/voice-input/voice-input.service';
+import { Store } from '@ngrx/store';
+import { AddToList } from '../store/listing-store/listing.action';
 
 @Component({
   selector: 'app-generic-listing-page',
@@ -15,7 +17,9 @@ import { VoiceInputService } from '../services/voice-input/voice-input.service';
   styleUrls: ['./generic-listing-page.component.scss'],
 })
 export class GenericListingPageComponent  implements OnInit {
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
   listingData: any = []
+  scrollPosition = 0;
   page = 1
   limit = 10
   count = 0
@@ -36,6 +40,7 @@ export class GenericListingPageComponent  implements OnInit {
   fromVoiceSearch:boolean = false;
   constructor(
     private activatedRoute: ActivatedRoute,
+    private store :Store<any>,
     private profileService: ProfileService,
     private projectsApiService: ProjectsApiService,
     private toastService: ToastService,
@@ -156,7 +161,18 @@ export class GenericListingPageComponent  implements OnInit {
     this.reset();
     this.noData = true;
     this.isMenuOpen = true;
-    this.getProfileDetails();
+    this.store.select('listing').subscribe((data) => {
+      console.log("data will Enter",data)
+      if (data.listing.length) {
+        this.listingData = data.listing;
+        this.page = data.page;
+        setTimeout(() => {
+          this.content?.scrollToPoint(0, data.scrollPosition, 300);
+        }, 500);
+      } else {
+        this.getProfileDetails();
+      }
+    });
   }
 
   getProfileDetails() {
@@ -266,6 +282,17 @@ export class GenericListingPageComponent  implements OnInit {
   }
 
   ionViewWillLeave() {
+    let item:any={
+      listing:this.listingData,
+      page:this.page
+    }
+    this.content?.getScrollElement().then(scrollEl => {
+      item={
+        ...item,
+        scrollPosition :scrollEl.scrollTop
+      }
+      this.store.dispatch(AddToList(item))
+    });
     this.searchBar = false;
     this.isMenuOpen = false;
     this.menuControl.close();

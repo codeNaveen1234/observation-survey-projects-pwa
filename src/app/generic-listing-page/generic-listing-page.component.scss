@@ -14,6 +14,11 @@
         }
     }
 }
+ion-content {
+  --overflow: auto !important;
+  overflow: auto;
+  height: 100%;
+}
 
 .highlight{
     color: var(--color-primary);

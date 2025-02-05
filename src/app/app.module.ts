@@ -21,6 +21,8 @@ import {
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { SharedModule } from './shared/shared.module';
 import { UtilService } from './services/util/util.service';
+import { StoreModule } from '@ngrx/store';
+import { listReducer } from './store/listing-store/listing.reducer';
 
 export function translateHttpLoaderFactory(httpClient: HttpClient) {
   return new TranslateHttpLoader(httpClient, './assets/i18n/', '.json');
@@ -40,7 +42,8 @@ export function translateHttpLoaderFactory(httpClient: HttpClient) {
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled:false,
       registrationStrategy: 'registerWhenStable:30000'
-    })
+    }),
+    StoreModule.forRoot({listing:listReducer})
   ],
   providers: [{ provide:RouteReuseStrategy, useClass: IonicRouteStrategy },
     {
